@@ -11,6 +11,11 @@ import pprint
 import collections
 import yaml
 
+# TODO:
+#
+# * dynamically discover timezone
+# * add station name in yaml
+
 
 #    8 bytes for timestamp
 #    5 for title
@@ -19,10 +24,10 @@ import yaml
 #   10 average for artist name
 #   --
 #   39 total bytes per record
-# x 11 stations
+# x 34 stations
 #   --
 #
-#  429 bytes
+#  1,326 bytes
 #
 #  24 * 60 minutes in a day = 1440
 #
@@ -31,14 +36,14 @@ import yaml
 #  ---
 #
 #        480 songs per day
-# x      429
+# x    1,326
 #  --------- 
-#     205920 bytes per day
+#    636,480 bytes per day
 #       x 30
 #  ---------
-#  6,177,600 bytes per month
+# 19,094,400 bytes per month
 
-URL = 'http://websvc.bdsrealtime.com/NBDS.Consumer.Tempo/nowplaying.aspx?uid=Service%s&stnid=%d'
+URL = 'http://websvc.bdsrealtime.com/NBDS.Consumer.Tempo/nowplaying.aspx?uid=Service%s&stnid=%04d'
 POST = '__EVENTTARGET=detectTime&__EVENTARGUMENT=&detectTime='
 
 def main():
@@ -81,7 +86,7 @@ def getLastSongTime( station, domain ):
 
   for j in rs:
     last_song_time = int(j.name, 16)
-    print "Last song: ", int(j.name, 16), ":", j
+    # print "Last song: ", int(j.name, 16), ":", j
     break
   else:
     last_song_time = 0
@@ -96,7 +101,7 @@ def getTimestamps( source, timezone ):
 
   song_times = re.findall('<option value=\"(.*?)\">(.*?)<\/option>', source)
   if ( len(song_times) == 0 ):
-    return None
+    return timestamps
 
   # Get the station's current time
   then = datetime.datetime(1970,1,1)
@@ -162,8 +167,6 @@ def scrapeStation( station, url, post, timezone ):
 
   domain = sdb.create_domain("%s-whatson" % station )
 
-  print domain
-
   try:
     fh = urllib.urlopen(url, post)
   except:
@@ -190,8 +193,8 @@ def scrapeStation( station, url, post, timezone ):
 
   # pprint.pprint( plays )
 
-  if plays:
-    storeInCloudDB( domain, plays )
+    if plays:
+      storeInCloudDB( domain, plays )
 
 
 if __name__ == "__main__":
