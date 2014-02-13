@@ -35,4 +35,70 @@ CJZN:
 CHFI:
   id: 4825
   tz: America/Toronto
+CJMK:
+  id: 6216
+  tz: America/Winnipeg
+CFMC:
+  id: 5492
+  tz: America/Winnipeg
+CITI:
+  id: 4782
+  tz: America/Winnipeg
+CIZL:
+  id: 5484
+  tz: America/Winnipeg
+CKCK:
+  id: 6692
+  tz: America/Winnipeg
+CFQC:
+  id: 5490
+  tz: America/Winnipeg
+CHYM:
+  id: 6405
+  tz: America/Toronto
+CIKR:
+  id: 6539
+  tz: America/Toronto
+CIDR:
+  id: 5189
+  tz: America/Toronto
+WLAT:
+  id: 5196
+  tz: America/Toronto
+WDRC:
+  id: 5907
+  tz: America/Toronto
+CJOJ:
+  id: 6321
+  tz: America/Toronto
+CFQR:
+  id: 4835
+  tz: America/Toronto
+CKIS:
+  id: 5334
+  tz: America/Edmonton
+KSOP:
+  id: 262
+  tz: America/Edmonton
+CJWW:
+  id: 5491
+  tz: America/Winnipeg
+CFRV:
+  id: 7586
+  tz: America/Edmonton
+CICX:
+  id: 6313
+  tz: America/Toronto
+CJWF:
+  id: 7589
+  tz: America/Toronto
+CIWV:
+  id: 6861
+  tz: America/Toronto
+CKLY:
+  id: 7100
+  tz: America/Toronto
+CKBY:
+  id: 6337
+  tz: America/Toronto
 ...
