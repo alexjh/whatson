@@ -49,16 +49,16 @@ def main():
     except pylast.WSError as error:
         print("Failed to log in:", error)
         sys.exit(-1)
+  
+    # Cache songs that we have already queried  
+    # {(Artist, Title): Album}
+    queried_songs = {}
+
+    # for station_id in stations.keys():
+    #     get_empty_album_plays( station_id, sdb )
 
     for station_id in stations.keys():
-        get_empty_album_plays( station_id, sdb )
-    while True:
-        for station_id in stations.keys():
-            print("Checking ", station_id)
-            if not add_album_attribute( station_id, sdb, lastfm ):
-                del stations[station_id]
-        if not len(stations):
-            break
+        add_album_attribute( station_id, sdb, lastfm, queried_songs )
 
     print(datetime.datetime.now())
 
@@ -72,7 +72,7 @@ def get_empty_album_plays( station, sdb ):
         print(item['Count'], "songs needing albums from", station)
 
 
-def add_album_attribute( station, sdb, lastfm ):
+def add_album_attribute( station, sdb, lastfm, queried_songs ):
     """Adds Album attribute for plays where it is not already set.
 
     Arguments:
@@ -105,11 +105,7 @@ def add_album_attribute( station, sdb, lastfm ):
 
     query = 'select * from `%s-whatson` where Album is null limit %d' \
                 % (station, SONGS_PER_DOMAIN)
-    result_set = domain.select(query, max_items=SONGS_PER_DOMAIN)
-
-    # TODO: FIXME: Move this to above the station loop so we cache globally,
-    # not per station
-    queried_songs = {}
+    result_set = domain.select(query)
 
     for item in result_set:
         if (item['Artist'], item['Title']) in queried_songs:
@@ -161,7 +157,7 @@ def find_album_name( track_details, lastfm ):
             if lastfm_album is not None:
                 album = lastfm_album.get_title()
             else:
-                #print("Album not in database", track_details)
+                #print("Album not in database", track_details, track)
                 pass
         else:
             #print("Track not in database", track_details)
