@@ -86,8 +86,9 @@ def add_album_attribute( station, sdb ):
 
         artist = item['Artist'].replace('"', '""')
         title = item['Title'].replace('"', '""')
-        song_query = 'select * from `%s-whatson` where Title = "%s"'\
-                     'and Artist = "%s"' % (station, title, artist)
+        song_query = 'select * from `%s-whatson` where Title = "%s" '\
+                     'and Artist = "%s" and Album is not NULL' \
+                     % (station, title, artist)
         song_rs = domain.select(song_query)
         for song in song_rs:
             song_item = domain.get_item(song.name)
