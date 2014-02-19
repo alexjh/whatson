@@ -1,8 +1,8 @@
 #!/usr/bin/python
 
 """Queries the databases for songs without albums recorded, and queries
-Musicbrainz for the album. This is done as a separate process, as the
-Musicbrainz API limits how fast you can grab data from it."""
+Last.fm for the album. This is done as a separate process, as the
+Last.fm API limits how fast you can grab data from it."""
 
 from __future__ import print_function
 import boto
@@ -10,14 +10,15 @@ import time
 import datetime
 import yaml
 import sys
+import os
 import pylast
-
+import ConfigParser
 
 SONGS_PER_DOMAIN = 100
 
 def main():
     """Looks for songs without an album attribute and fills them in
-    via Musicbrainz"""
+    via Last.fm"""
     print(datetime.datetime.now())
 
     try:
@@ -30,7 +31,17 @@ def main():
 
     sdb = boto.connect_sdb()
 
-    # TODO: FIXME: Get lastfm credentials from config file
+    config = ConfigParser.ConfigParser()
+
+    cfg_file = '.lastfm'
+    if not os.path.isfile(cfg_file) or (config.read(cfg_file)[0] != cfg_file):
+        print("Error reading config file")
+        sys.exit(-1)
+
+    username      = config.get('Credentials', 'username')
+    password_hash = config.get('Credentials', 'password_hash')
+    api_key       = config.get('Credentials', 'api_key')
+    api_secret    = config.get('Credentials', 'api_secret')
 
     try:
         lastfm = pylast.LastFMNetwork(api_key = api_key, api_secret = 
@@ -134,7 +145,7 @@ def find_album_name( track_details, lastfm ):
 
     album = ""
 
-    # Musicbrainz limits API calls to one per second from a specific IP
+    # Last.fm limits API calls to five per second from a specific IP
     time.sleep(0.2)
 
     try:
