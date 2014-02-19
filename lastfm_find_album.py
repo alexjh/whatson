@@ -13,6 +13,7 @@ import sys
 import os
 import pylast
 import ConfigParser
+import whats_on_translate
 
 SONGS_PER_DOMAIN = 100
 
@@ -54,11 +55,28 @@ def main():
     # {(Artist, Title): Album}
     queried_songs = {}
 
+    # Songs not found by last.fm
+    missing_tracks = []
+
+    # Songs found by last.fm but don't have an associated album
+    missing_albums = []
+
     # for station_id in stations.keys():
     #     get_empty_album_plays( station_id, sdb )
 
     for station_id in stations.keys():
-        add_album_attribute( station_id, sdb, lastfm, queried_songs )
+        add_album_attribute( station_id, sdb, lastfm, queried_songs,
+                             missing_tracks, missing_albums )
+
+    track_file = open('missing_tracks', 'w')
+    track_file.write(str(missing_tracks))
+    track_file.write('\n')
+    track_file.close()
+
+    album_file = open('missing_albums', 'w')
+    album_file.write(str(missing_albums))
+    album_file.write('\n')
+    album_file.close()
 
     print(datetime.datetime.now())
 
@@ -72,7 +90,7 @@ def get_empty_album_plays( station, sdb ):
         print(item['Count'], "songs needing albums from", station)
 
 
-def add_album_attribute( station, sdb, lastfm, queried_songs ):
+def add_album_attribute( station, sdb, lastfm, queried_songs, missing_tracks, missing_albums ):
     """Adds Album attribute for plays where it is not already set.
 
     Arguments:
@@ -112,7 +130,25 @@ def add_album_attribute( station, sdb, lastfm, queried_songs ):
             # print(item['Artist'], item['Title'], "has already been found")
             continue
 
-        album = find_album_name(item, lastfm)
+        album = find_album_name(item, lastfm, missing_tracks, missing_albums)
+
+        if album == "":
+            new_artist = whats_on_translate.translate_artist(item['Artist'])
+            new_song = whats_on_translate.translate_song(item['Title'])
+
+            if new_artist != item['Artist'] or new_song != item['Title']:
+                album = find_album_name({'Artist': new_artist,
+                                         'Title': new_song},
+                                        lastfm, missing_tracks, missing_albums)
+
+                print("Changed ", item, "to", new_artist, "-", new_song, "album: ", album, "(", domain.name, ")")
+
+                if album != "":
+
+                    if (item['Artist'], item['Title']) in missing_tracks:
+                        missing_tracks.remove((item['Artist'], item['Title']))
+                    if (item['Artist'], item['Title']) in missing_albums:
+                        missing_albums.remove((item['Artist'], item['Title']))
 
         queried_songs[(item['Artist'], item['Title'])] = album
 
@@ -130,14 +166,14 @@ def add_album_attribute( station, sdb, lastfm, queried_songs ):
         song_rs = domain.select(song_query)
         for song in song_rs:
             song_item = domain.get_item(song.name)
-            print("Updating", song_item.name, song_item)
+            print("Updating", song_item.name, song_item, "to", album)
             song_item['Album'] = album
             song_item.save()
     
     return count != 0
 
 
-def find_album_name( track_details, lastfm ):
+def find_album_name( track_details, lastfm, missing_tracks, missing_albums ):
 
     album = ""
 
@@ -158,12 +194,18 @@ def find_album_name( track_details, lastfm ):
                 album = lastfm_album.get_title()
             else:
                 #print("Album not in database", track_details, track)
+                missing_albums.append((track_details['Artist'],
+                                       track_details['Title']))
                 pass
         else:
             #print("Track not in database", track_details)
+            missing_tracks.append((track_details['Artist'],
+                                   track_details['Title']))
             pass
     except pylast.WSError as error:
-        print("Track not found:", error, track_details)
+        #print("Track not found:", error, track_details)
+        missing_tracks.append((track_details['Artist'],
+                               track_details['Title']))
 
     return album
 
