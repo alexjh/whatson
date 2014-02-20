@@ -199,7 +199,9 @@ def get_lastfm_track( track_details, lastfm ):
                 album = get_lastfm_album( track )
                 if album is None:
                     if VERBOSE:
-                        print("No album for", track, "using original", orig_track)
+                        print("No album for", track, 
+                              "using original", orig_track)
+                if album is None:
                     track = orig_track
         else:
             #if VERBOSE:
@@ -209,6 +211,7 @@ def get_lastfm_track( track_details, lastfm ):
     return track
 
 def get_lastfm_id( track ):
+    """Gets lastfm ID for a track"""
     track_id = None
 
     try:
@@ -222,6 +225,7 @@ def get_lastfm_id( track ):
     return track_id
 
 def get_lastfm_mbid( track ):
+    """Gets Musicbrainz ID for a track"""
     mbid = None
 
     try:
@@ -235,6 +239,7 @@ def get_lastfm_mbid( track ):
     return mbid
 
 def get_lastfm_artist( track ):
+    """Gets artist for a track"""
     artist = None
 
     try:
@@ -248,6 +253,7 @@ def get_lastfm_artist( track ):
     return artist
 
 def get_lastfm_album( track ):
+    """Gets album for a track"""
     title = None
 
     try:
