@@ -20,23 +20,8 @@ def main():
     via Last.fm"""
     print(datetime.datetime.now())
 
-    config = ConfigParser.ConfigParser()
-
-    cfg_file = '.lastfm'
-    if not os.path.isfile(cfg_file) or (config.read(cfg_file)[0] != cfg_file):
-        print("Error reading config file")
-        sys.exit(-1)
-
-    username      = config.get('Credentials', 'username')
-    password_hash = config.get('Credentials', 'password_hash')
-    api_key       = config.get('Credentials', 'api_key')
-    api_secret    = config.get('Credentials', 'api_secret')
-
-    try:
-        lastfm = pylast.LastFMNetwork(api_key = api_key, api_secret = 
-                api_secret, username = username, password_hash = password_hash)
-    except pylast.WSError as error:
-        print("Failed to log in:", error)
+    lastfm = get_lastfm_conn()
+    if lastfm is None:
         sys.exit(-1)
 
     tracks = [
@@ -55,6 +40,35 @@ def main():
 
   
     print(datetime.datetime.now())
+
+def get_lastfm_conn(cfg_file = '.lastfm'):
+    """Acquires a lastfm network connection
+    
+    Returns a connection if successful, None if it failed
+    
+    """
+    lastfm = None
+
+    config = ConfigParser.ConfigParser()
+
+    if not os.path.isfile(cfg_file) or (config.read(cfg_file)[0] != cfg_file):
+        print("Error reading config file")
+    else:
+        username      = config.get('Credentials', 'username')
+        password_hash = config.get('Credentials', 'password_hash')
+        api_key       = config.get('Credentials', 'api_key')
+        api_secret    = config.get('Credentials', 'api_secret')
+
+        try:
+            lastfm = pylast.LastFMNetwork(api_key = api_key,
+                                          api_secret = api_secret,
+                                          username = username,
+                                          password_hash = password_hash)
+        except pylast.WSError as error:
+            print("Failed to log in:", error)
+
+    return lastfm
+
 
 
 def get_lastfm_track_info( track_details, lastfm ):
