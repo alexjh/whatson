@@ -13,7 +13,7 @@ import pylast
 import ConfigParser
 import whats_on_translate
 
-SONGS_PER_DOMAIN = 100
+VERBOSE = False
 
 def main():
     """Looks for songs without an album attribute and fills them in
@@ -153,17 +153,20 @@ def get_lastfm_track( track_details, lastfm ):
     try:
         track = lastfm.get_track(track_details['Artist'],
                                  track_details['Title'])
-        print("Found track:", track)
+        if VERBOSE:
+            print("Found track:", track)
     except pylast.WSError as error:
         print("Track not found:", error, track_details)
 
     if track is not None:
         album = get_lastfm_album( track )
-        print("Valid track, checking for album:", album)
+        if VERBOSE:
+            print("Valid track, checking for album:", album)
         orig_track = track
 
     if track is None or album is None:
-        print("Invalid track or album, translating")
+        if VERBOSE:
+            print("Invalid track or album, translating")
 
         artist = whats_on_translate.translate_artist(track_details['Artist'])
         song = whats_on_translate.translate_song((track_details['Artist'],
@@ -174,16 +177,20 @@ def get_lastfm_track( track_details, lastfm ):
 
             try:
                 track = lastfm.get_track(artist, song)
-                print("Found translated track:", track, artist, song)
+                if VERBOSE:
+                    print("Found translated track:", track, artist, song)
             except pylast.WSError as error:
                 print("Track not found:", error, track_details)
             if track is not None:
                 album = get_lastfm_album( track )
                 if album is None:
-                    print("No album for", track, "using original", orig_track)
+                    if VERBOSE:
+                        print("No album for", track, "using original", orig_track)
                     track = orig_track
         else:
-            print("No translations for", track_details)
+            #if VERBOSE:
+            if True:
+                print("No translations for", track_details)
 
     return track
 
@@ -195,7 +202,8 @@ def get_lastfm_id( track ):
     except pylast.MalformedResponseError as error:
         print("Malformed response", error)
     except pylast.WSError as error:
-        print("LastFM ID not found:", error, track)
+        if VERBOSE:
+            print("LastFM ID not found:", error, track)
 
     return track_id
 
@@ -207,7 +215,8 @@ def get_lastfm_mbid( track ):
     except pylast.MalformedResponseError as error:
         print("Malformed response", error)
     except pylast.WSError as error:
-        print("MBID not found:", error, track)
+        if VERBOSE:
+            print("MBID not found:", error, track)
 
     return mbid
 
@@ -219,7 +228,8 @@ def get_lastfm_artist( track ):
     except pylast.MalformedResponseError as error:
         print("Malformed response", error)
     except pylast.WSError as error:
-        print("Artist not found:", error, track)
+        if VERBOSE:
+            print("Artist not found:", error, track)
 
     return artist
 
@@ -233,7 +243,8 @@ def get_lastfm_album( track ):
     except pylast.MalformedResponseError as error:
         print("Malformed response", error)
     except pylast.WSError as error:
-        print("Album not found:", error, track)
+        if VERBOSE:
+            print("Album not found:", error, track)
 
     return title
 
