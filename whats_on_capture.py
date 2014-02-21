@@ -4,7 +4,6 @@
 
 from __future__ import print_function
 import boto
-import time
 import datetime
 import re
 import pytz
@@ -12,11 +11,10 @@ import sys
 import urllib
 import collections
 import yaml
-from musicbrainz2.webservice import Query, TrackFilter, WebServiceError, \
-                                    AuthenticationError, ConnectionError, \
-                                    RequestError, ResponseError, \
-                                    ResourceNotFoundError
-from musicbrainz2.model import Release
+import lastfm_utils
+import pylast
+import ConfigParser
+import os
 
 
 # TODO:
@@ -60,6 +58,25 @@ def main():
   
     print(datetime.datetime.now())
   
+    config = ConfigParser.ConfigParser()
+
+    cfg_file = '.lastfm'
+    if not os.path.isfile(cfg_file) or (config.read(cfg_file)[0] != cfg_file):
+        print("Error reading config file")
+        sys.exit(-1)
+
+    username      = config.get('Credentials', 'username')
+    password_hash = config.get('Credentials', 'password_hash')
+    api_key       = config.get('Credentials', 'api_key')
+    api_secret    = config.get('Credentials', 'api_secret')
+
+    try:
+        lastfm = pylast.LastFMNetwork(api_key = api_key, api_secret = 
+                api_secret, username = username, password_hash = password_hash)
+    except pylast.WSError as error:
+        print("Failed to log in:", error)
+        sys.exit(-1)
+
     try:
         stations_yaml = open('stations.yaml')
     except IOError:
@@ -68,13 +85,28 @@ def main():
   
     stations = yaml.load(stations_yaml)
   
+    sdb = boto.connect_sdb()
+
+    queried_songs = {}
+
     for key, value in stations.items():
-        scrapeStation( key, URL % (key, value['id']), POST, value['tz'] )
+        # if key != 'CJZN':
+        #     continue
+
+        print("Scraping", key)
+
+        scrape_station( key, 
+                        URL % (key, value['id']), 
+                        POST, 
+                        value['tz'], 
+                        sdb, 
+                        lastfm,
+                        queried_songs )
   
     print(datetime.datetime.now())
 
 
-def store_in_cloud_db( domain, plays ):
+def store_in_cloud_db( domain, plays, lastfm, queried_songs ):
     """Stores a play list in a SimpleDB domain
   
     Existing plays will be queried to see if the album has already been defined.
@@ -88,29 +120,24 @@ def store_in_cloud_db( domain, plays ):
     total = 0
   
     for epoch, attrs in plays.items():
-        artist = attrs[0].replace('"', '""')
-        title = attrs[1].replace('"', '""')
 
-        # Check for Album attribute set
-        song_query = 'select * from `%s` where (`Album` is not NULL or `No_Album` is not NULL) ' \
-                     'and `Artist` = "%s" and `Title` = "%s"' \
-                     % (domain.name, artist, title)
-    
-        song_rs = domain.select(song_query, max_items=1)
-        album = None
-        for song in song_rs:
-            album = song['Album']
-            no_album = song['No_Album']
-        if (album is not None and album is not "") or (no_album is not None):
-            # TODO: FIXME: Query all domains, not just the current station
-            item_attrs = {'Artist': attrs[0],
-                          'Title': attrs[1],
-                          'Album': album,
-                          'No_Album': no_album}
-            #print("Found existing album", album, "for", attrs)
+        play = {'Artist': attrs[0], 'Title': attrs[1]}
+
+        if attrs in queried_songs:
+            item_attrs = queried_songs[attrs]
         else:
-            item_attrs = {'Artist': attrs[0], 'Title': attrs[1]}
-            #print("Could not find album for", attrs)
+            track_info = lastfm_utils.get_lastfm_track_info(play,
+                                                            lastfm)
+            item_attrs = play
+
+            if track_info:
+                for key in ['Album', 'MBID', 'LFID']:
+                    if key in track_info:
+                        item_attrs[key] = track_info[key]
+
+            # Cache play info for next time
+            queried_songs[attrs] = item_attrs
+
         items["%08x" % epoch] = item_attrs
     
         if len(items) == 20:
@@ -194,87 +221,17 @@ def get_timestamps( source, timezone ):
   
     return timestamps
 
-def getSongInfo( plays ):
-    detailed_plays = collections.OrderedDict()
-  
-    for k,v in plays.items():
-  
-        q = Query()
-        time.sleep(1.1)
-    
-        found = False
-        i = 1
-        while not found and i < 10:
-            try:
-                f = TrackFilter(title=v[1], artistName=v[0])
-                results = q.getTracks(f)
-                found = True
-            except (AuthenticationError,
-                    ConnectionError,
-                    RequestError,
-                    ResponseError,
-                    ResourceNotFoundError,
-                    WebServiceError) as error:
-                detailed_plays[k] = (v[0], v[1], "")
-                print('Error:', error, 'waiting', i*10, 'seconds')
-                results = None
-                time.sleep(i*10)
-                i += 1
-    
-    
-        if (results != None) and (len(results) != 0):
-    
-            found_release = None
-            release_type = None
-            release = None
-    
-            for result in results:
-    
-                track = result.track
-                title = track.title
-                artist = track.artist.name
-    
-                # Prefer: album, single, live, anything else
-    
-                for release in track.releases:
-                    if Release.TYPE_ALBUM in release.getTypes():
-                        found_release = release
-                        release_type = Release.TYPE_ALBUM
-                        break
-                    elif Release.TYPE_SINGLE in release.getTypes():
-                        if release_type != Release.TYPE_ALBUM:
-                            found_release = release
-                            release_type = Release.TYPE_SINGLE
-                    elif Release.TYPE_LIVE in release.getTypes():
-                        if release_type != Release.TYPE_ALBUM and \
-                           release_type != Release.TYPE_SINGLE:
-                            found_release = release
-                            release_type = Release.TYPE_LIVE
-                    else:
-                        if release_type != Release.TYPE_ALBUM and \
-                           release_type != Release.TYPE_SINGLE and \
-                           release_type != Release.TYPE_LIVE:
-                            found_release = release
-    
-                if release_type == Release.TYPE_ALBUM:
-                    break
-    
-                if found_release == None:
-                    album = ""
-                else:
-                    album = release.title
-    
-            detailed_plays[k] = (artist, title, album)
-        else:
-            detailed_plays[k] = (v[0], v[1], "")
 
-    return detailed_plays
+def get_plays( times, url, post_base ):
+    """
 
+    Returns an OrderedDict of key = epoch, value = (artist, song)
 
-def getPlays( times, url, post_base ):
+    """
+
     plays = collections.OrderedDict()
   
-    # i = 0
+    #i = 0
   
     for epoch, url_time_str in times.iteritems():
         post = post_base + url_time_str.replace(':', '%3A')
@@ -293,15 +250,14 @@ def getPlays( times, url, post_base ):
         plays[epoch] = (artist[0], song[0])
     
         # Limit accesses per run:
-        # if i == 10:
-        #   break
+        #if i == 10:
+        #  break
     
-        # i += 1
+        #i += 1
 
     return plays
 
-def scrapeStation( station, url, post, timezone ):
-    sdb = boto.connect_sdb()
+def scrape_station( station, url, post, timezone, sdb, lastfm, queried_songs ):
 
     domain = sdb.create_domain("%s-whatson" % station )
 
@@ -327,10 +283,10 @@ def scrapeStation( station, url, post, timezone ):
             filtered_times[key] = value
 
     if times:
-        plays = getPlays( filtered_times, url, post )
+        plays = get_plays( filtered_times, url, post )
 
         if plays:
-            store_in_cloud_db( domain, plays )
+            store_in_cloud_db( domain, plays, lastfm, queried_songs )
 
 
 if __name__ == "__main__":
