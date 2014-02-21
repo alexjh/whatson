@@ -1,0 +1,21 @@
+- fields: {name: Mounties}
+  model: musiclog.artist
+  pk: 1
+- fields: {name: Nine Inch Nails}
+  model: musiclog.artist
+  pk: 2
+- fields: {album: null, artist: 1, lfid: null, mbid: '', title: Tokyo Summer}
+  model: musiclog.track
+  pk: 1
+- fields: {callsign: CJZN, name: The Zone}
+  model: musiclog.station
+  pk: 1
+- fields: {callsign: CKBT, name: The Beat}
+  model: musiclog.station
+  pk: 2
+- fields: {station: 1, timestamp: !!timestamp '2014-02-21 19:36:20+00:00', track: 1}
+  model: musiclog.airplay
+  pk: 1
+- fields: {station: 1, timestamp: !!timestamp '2014-02-21 19:38:53+00:00', track: 1}
+  model: musiclog.airplay
+  pk: 2
