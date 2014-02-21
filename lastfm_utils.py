@@ -4,6 +4,10 @@
 Last.fm for the album. This is done as a separate process, as the
 Last.fm API limits how fast you can grab data from it."""
 
+# TODO:
+#
+# * Handle retries when pylast.NetworkError occurs
+
 from __future__ import print_function
 import time
 import datetime
