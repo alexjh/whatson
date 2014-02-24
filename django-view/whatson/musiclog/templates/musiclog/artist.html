@@ -1,0 +1,81 @@
+{% load bootstrap_toolkit %}
+
+{% extends 'dh5bp/base.html' %}
+{% load url from future %}
+{% load staticfiles %}
+
+{% block pre_main_script %}
+        <script src="{% static "js/musiclog/js/Chart.js" %}"></script>
+    <script>
+
+        var doughnutData = [
+                {
+                    value: 30,
+                    color:"#F7464A"
+                },
+                {
+                    value : 50,
+                    color : "#46BFBD"
+                },
+                {
+                    value : 100,
+                    color : "#FDB45C"
+                },
+                {
+                    value : 40,
+                    color : "#949FB1"
+                },
+                {
+                    value : 120,
+                    color : "#4D5360"
+                }
+            ];
+
+    var myDoughnut = new Chart(document.getElementById("canvas").getContext("2d")).Doughnut(doughnutData);
+    </script>
+{% endblock %}
+
+{% block head %}
+        <link rel="stylesheet" href="{% static "css/musiclog/css/hint.css" %}">
+{% endblock %}
+
+{% block title %}What's On :: Artist :: {{ artist_info.name }}{% endblock %}
+
+{% block content %}
+
+<h1>{{ artist_info.name }}</h1>
+
+<h2>Recent plays</h2>
+{% if latest_airplays %}
+    <ul>
+    {% for airplay in latest_airplays %}
+        <li>
+            <a href="/musiclog/track/{{ airplay.track.id }}/">{{ airplay.track.title }}
+            </a>
+        </li>
+    {% endfor %}
+    </ul>
+
+
+{% else %}
+    <p>No recent tracks.</p>
+{% endif %}
+
+<h2>Popular Tracks</h2>
+{% if airplay_counts %}
+    <ul>
+    {% for airplay in airplay_counts %}
+        <li>
+            <a href="/musiclog/track/{{ airplay.track__id }}/">{{ airplay.track__title }}
+            </a>
+        </li>
+    {% endfor %}
+    </ul>
+{% endif %}
+
+<p>
+<canvas id="canvas" height="100" width="100"></canvas>
+</p>
+
+
+{% endblock %}

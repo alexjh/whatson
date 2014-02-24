@@ -1,0 +1,10 @@
+{% load bootstrap_toolkit %}
+
+<h1>
+    Details for {{ track_info.title }} by {{ track_info.artist }}
+    {% if track_info.album %}
+    from {{ track_info.album }}
+    {% endif %}
+</h1>
+<p> Most recently played at {{newest_play.timestamp}} by {{newest_play.station.name}}</p>
+<p> First recently played at {{first_play.timestamp}} by {{first_play.station.name}}</p>
