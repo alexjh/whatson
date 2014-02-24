@@ -1,8 +1,16 @@
 from django.conf.urls import patterns, include, url
 
+# Static files during deployment
+from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+
 # Tastypie
 from tastypie.api import Api
 from musiclog.api import TrackResource, ArtistResource, StationResource, ReleaseResource, AirplayResource
+
+# HTML5 Boilerplate
+from dh5bp.urls import urlpatterns as dh5bp_urls
+
+
 
 
 # Uncomment the next two lines to enable the admin:
@@ -35,3 +43,7 @@ urlpatterns = patterns('',
     # Musiclog
     url(r'^musiclog/', include('musiclog.urls')),
 )
+
+# urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+urlpatterns += staticfiles_urlpatterns()
+urlpatterns += dh5bp_urls
