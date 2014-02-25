@@ -7,10 +7,12 @@ import whats_on_translate
 
 OVERRIDE_ARTIST_EQ = [
                       ('Who', 'The Who'),
+                      ('dude', None),
                      ]
 
 OVERRIDE_ARTIST_NE = [
                       ('dude', 'fail'),
+                      ('Who', None),
                      ]
 
 def test_override_artist():
@@ -26,6 +28,7 @@ def test_override_artist():
 
 OVERRIDE_SONG_EQ = [
                     (('deadmau5', "Ghosts 'N Stuff"), "Ghosts N Stuff"),
+                    (('foo', 'fail'), None),
                    ]
 
 OVERRIDE_SONG_NE = [
