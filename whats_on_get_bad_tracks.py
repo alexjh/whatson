@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# vim: set fileencoding=utf-8 :
 
 """Queries the databases for songs where the LFID is NULL
 
