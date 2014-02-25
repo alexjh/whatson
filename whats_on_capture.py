@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# vim: set fileencoding=utf-8 :
 
 """Scrapes websvc and adds them to SimpleDB"""
 
@@ -58,23 +59,9 @@ def main():
   
     print(datetime.datetime.now())
   
-    config = ConfigParser.ConfigParser()
+    lastfm = lastfm_utils.get_lastfm_conn()
 
-    cfg_file = '.lastfm'
-    if not os.path.isfile(cfg_file) or (config.read(cfg_file)[0] != cfg_file):
-        print("Error reading config file")
-        sys.exit(-1)
-
-    username      = config.get('Credentials', 'username')
-    password_hash = config.get('Credentials', 'password_hash')
-    api_key       = config.get('Credentials', 'api_key')
-    api_secret    = config.get('Credentials', 'api_secret')
-
-    try:
-        lastfm = pylast.LastFMNetwork(api_key = api_key, api_secret = 
-                api_secret, username = username, password_hash = password_hash)
-    except pylast.WSError as error:
-        print("Failed to log in:", error)
+    if lastfm is None:
         sys.exit(-1)
 
     try:
