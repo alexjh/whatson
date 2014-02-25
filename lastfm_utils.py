@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# vim: set fileencoding=utf-8 :
 
 """Queries the databases for songs without albums recorded, and queries
 Last.fm for the album. This is done as a separate process, as the
@@ -119,6 +120,9 @@ def get_lastfm_track_info( track_details, lastfm ):
     if song is None:
         song = track_details['Title']
 
+    if VERBOSE:
+        print("Looking for ", artist, song)
+
     track = get_lastfm_track( {'Artist': artist, 'Title': song}, lastfm )
 
     if track:
@@ -173,6 +177,8 @@ def get_lastfm_track( track_details, lastfm ):
                                  track_details['Title'])
         if VERBOSE:
             print("Found track:", track)
+            get_lastfm_id( track )
+
     except pylast.WSError as error:
         print("Track not found:", error, track_details)
 
