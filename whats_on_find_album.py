@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# vim: set fileencoding=utf-8 :
 
 """Queries the databases for songs without albums recorded, and queries
 Musicbrainz for the album. This is done as a separate process, as the
@@ -60,7 +61,7 @@ def add_album_attribute( station, sdb ):
 
     domain = sdb.get_domain("%s-whatson" % station )
 
-    query = 'select count(*) from `%s-whatson` where Album is null' \
+    query = 'select count(*) from `%s-whatson` where `Album` is null' \
             % (station)
     result_set = domain.select(query, max_items=1)
     for item in result_set:
@@ -75,7 +76,7 @@ def add_album_attribute( station, sdb ):
     # Find all of the songs with that title/artist, and update with
     # the album
 
-    query = 'select * from `%s-whatson` where Album is null limit %d' \
+    query = 'select * from `%s-whatson` where `Album` is null limit %d' \
                 % (station, SONGS_PER_DOMAIN)
     result_set = domain.select(query, max_items=SONGS_PER_DOMAIN)
     for item in result_set:
@@ -86,8 +87,8 @@ def add_album_attribute( station, sdb ):
 
         artist = item['Artist'].replace('"', '""')
         title = item['Title'].replace('"', '""')
-        song_query = 'select * from `%s-whatson` where Title = "%s" '\
-                     'and Artist = "%s" and Album is not NULL' \
+        song_query = 'select * from `%s-whatson` where `Title` = "%s" '\
+                     'and `Artist` = "%s" and `Album` is not NULL' \
                      % (station, title, artist)
         song_rs = domain.select(song_query)
         for song in song_rs:

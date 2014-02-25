@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# vim: set fileencoding=utf-8 :
 
 """Queries the databases for songs where the album string is '' and deletes
 that attribute."""
@@ -43,7 +44,7 @@ def delete_empty_album_string( station, sdb ):
 
     domain = sdb.get_domain("%s-whatson" % station )
 
-    query = 'select * from `%s` where Album = ""' % domain.name
+    query = 'select * from `%s` where `Album` = ""' % domain.name
     result_set = domain.select(query)
     for item in result_set:
         domain.delete_attributes(item.name, ['Album'], ['Album', ''])
