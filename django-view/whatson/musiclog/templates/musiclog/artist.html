@@ -1,6 +1,5 @@
-{% load bootstrap_toolkit %}
-
 {% extends 'dh5bp/base.html' %}
+{% load bootstrap_toolkit %}
 {% load url from future %}
 {% load staticfiles %}
 
@@ -8,74 +7,158 @@
         <script src="{% static "js/musiclog/js/Chart.js" %}"></script>
     <script>
 
-        var doughnutData = [
-                {
-                    value: 30,
-                    color:"#F7464A"
-                },
-                {
-                    value : 50,
-                    color : "#46BFBD"
-                },
-                {
-                    value : 100,
-                    color : "#FDB45C"
-                },
-                {
-                    value : 40,
-                    color : "#949FB1"
-                },
-                {
-                    value : 120,
-                    color : "#4D5360"
-                }
-            ];
+    {{doughnut_data|escape|safe}}
+    var myDoughnut = new Chart(document.getElementById("airplayChart").getContext("2d")).Doughnut(doughnut_data);
 
-    var myDoughnut = new Chart(document.getElementById("canvas").getContext("2d")).Doughnut(doughnutData);
+    {{station_doughnut|escape|safe}}
+    var stationDoughnut = new Chart(document.getElementById("stationChart").getContext("2d")).Doughnut(station_doughnut);
+
     </script>
 {% endblock %}
 
 {% block head %}
-        <link rel="stylesheet" href="{% static "css/musiclog/css/hint.css" %}">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="{% static "css/musiclog/css/hint.css" %}">
+<link href="{% static "css/musiclog/css/bootstrap.css" %}" rel="stylesheet">
+<link href="{% static "css/musiclog/css/starter-template.css" %}" rel="stylesheet">
 {% endblock %}
 
 {% block title %}What's On :: Artist :: {{ artist_info.name }}{% endblock %}
 
 {% block content %}
 
-<h1>{{ artist_info.name }}</h1>
 
+<!-- TODO Make this common across all templates. -->
+<div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#">What's On</a>
+        </div>
+        <div class="collapse navbar-collapse">
+            <ul class="nav navbar-nav">
+                <li class="active"><a href="#">Home</a></li>
+                <li><a href="/musiclog/station">Stations</a></li>
+                <li><a href="/musiclog/artist">Artists</a></li>
+                <li><a href="/musiclog/track">Tracks</a></li>
+            </ul>
+        </div><!--/.nav-collapse -->
+    </div>
+</div>
+
+<div class="container">
+
+  <div class="page-header">
+    <h1>{{ artist_info.name }}</h1>
+  </div>
+
+<div class="panel panel-default">
+  <div class="panel-heading">
 <h2>Recent plays</h2>
+  </div>
+  <div class="panel-body">
 {% if latest_airplays %}
-    <ul>
-    {% for airplay in latest_airplays %}
-        <li>
-            <a href="/musiclog/track/{{ airplay.track.id }}/">{{ airplay.track.title }}
-            </a>
-        </li>
-    {% endfor %}
-    </ul>
+  <table class="table table-striped">
+    <thead>
+    <tr>
+      <th>Name</th>
+      <th>Station</th>
+      <th>Time</th>
+    </tr>
+    </thead>
+    <tbody>
+  {% for airplay in latest_airplays %}
+    <tr>
+      <td>
+        <a href="/musiclog/track/{{ airplay.track.id }}/">{{ airplay.track.title }}
+        </a>
+      </td>
+      <td><a href="/musiclog/station/{{ airplay.station.id }}/">{{ airplay.station.name}}</a></td>
+      <td>{{ airplay.timestamp }}</td>
+    </tr>
+  {% endfor %}
+    </tbody>
+  </table>
+  </div> <!-- panel body -->
+</div> <!-- panel -->
 
 
 {% else %}
     <p>No recent tracks.</p>
 {% endif %}
 
+<div class="panel panel-default">
+  <div class="panel-heading">
 <h2>Popular Tracks</h2>
-{% if airplay_counts %}
-    <ul>
-    {% for airplay in airplay_counts %}
-        <li>
-            <a href="/musiclog/track/{{ airplay.track__id }}/">{{ airplay.track__title }}
-            </a>
-        </li>
+  </div>
+<div class="panel-body">
+  <div class="row">
+    <div class="col-md-4">
+{% if airplay_popular %}
+      <table class="table">
+    {% for airplay in airplay_popular %}
+        <tr>
+          <td>
+            <a href="/musiclog/track/{{ airplay.0.track__id }}/">{{ airplay.0.track__title }} </a>
+          </td>
+          <td>
+            <span class="badge">{{ airplay.0.track__id__count }}</span>
+          </td>
+          <td bgcolor="{{ airplay.1 }}"></td>
+        </tr>
     {% endfor %}
-    </ul>
+    </table>
 {% endif %}
 
-<p>
-<canvas id="canvas" height="100" width="100"></canvas>
-</p>
+    </div>
+    <div class="col-md-2">
+    </div>
+    <div class="col-md-6">
+      <canvas id="airplayChart" height="300" width="300" ></canvas>
+    </div> <!-- column -->
+  </div> <!-- row -->
+</div> <!-- panel-body -->
+</div> <!-- end panel -->
 
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h2>Plays by Station</h2>
+  </div>
+  <div class="panel-body">
+  <div class="row">
+  <div class="col-md-4">
+  {% if station_plays %}
+    <table class="table">
+      {% for station in station_plays %}
+          <tr><td>
+              <a href="/musiclog/track/{{ station.0.station__id }}/">{{ station.0.station__name }}
+              </a>
+          </td>
+          <td>
+            <span class="badge">{{ station.0.station__id__count }}</span>
+          </td>
+      <td bgcolor="{{ station.1 }}"></td>
+          <tr>
+      {% endfor %}
+      </table>
+  {% endif %}
+  </div>
+  <div class="col-md-2">
+  </div>
+  <div class="col-md-6">
+  <p>
+  <canvas id="stationChart" height="300" width="300"></canvas>
+  </p>
+  </div>
+  </div>
+  </div> <!-- end panel body -->
+</div> <!-- end panel -->
+
+</div> <!-- end container -->
 
 {% endblock %}

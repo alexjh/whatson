@@ -1,10 +1,140 @@
+{% extends 'dh5bp/base.html' %}
 {% load bootstrap_toolkit %}
+{% load url from future %}
+{% load staticfiles %}
 
+{% block pre_main_script %}
+        <script src="{% static "js/musiclog/js/Chart.js" %}"></script>
+    <script>
+
+    {{station_doughnut|escape|safe}}
+    var stationDoughnut = new Chart(document.getElementById("stationChart").getContext("2d")).Doughnut(station_doughnut);
+
+    </script>
+{% endblock %}
+
+{% block head %}
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="{% static "css/musiclog/css/hint.css" %}">
+<link href="{% static "css/musiclog/css/bootstrap.css" %}" rel="stylesheet">
+<link href="{% static "css/musiclog/css/starter-template.css" %}" rel="stylesheet">
+{% endblock %}
+
+{% block title %}What's On :: Track :: {{ track_info.title }}{% endblock %}
+
+{% block content %}
+
+<div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#">What's On</a>
+        </div>
+        <div class="collapse navbar-collapse">
+            <ul class="nav navbar-nav">
+                <li class="active"><a href="#">Home</a></li>
+                <li><a href="/musiclog/station">Stations</a></li>
+                <li><a href="/musiclog/artist">Artists</a></li>
+                <li><a href="/musiclog/track">Tracks</a></li>
+            </ul>
+        </div><!--/.nav-collapse -->
+    </div>
+</div>
+
+<div class="container">
+
+  <div class="page-header">
 <h1>
-    Details for {{ track_info.title }} by {{ track_info.artist }}
+    {{ track_info.title }} <br />
+    <small>
     {% if track_info.album %}
-    from {{ track_info.album }}
+    from {{ track_info.album }}<br />
     {% endif %}
+by <a href="/musiclog/artist/{{ track_info.artist.id }}/">{{ track_info.artist }}</a>
+</small>
 </h1>
-<p> Most recently played at {{newest_play.timestamp}} by {{newest_play.station.name}}</p>
-<p> First recently played at {{first_play.timestamp}} by {{first_play.station.name}}</p>
+</div>
+<div class="alert alert-info">
+  <p> Most recently played at {{newest_play.timestamp}} by 
+  <a class="alert-link" href="/musiclog/station/{{newest_play.station.id}}">
+    {{newest_play.station.name}}
+  </a>
+  </p>
+  <p> First played at {{first_play.timestamp}} by 
+  <a class="alert-link" href="/musiclog/station/{{first_play.station.id}}">{{first_play.station.name}}
+  </a>
+  </p>
+</div>
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h2>Recent Plays</h2>
+  </div>
+  <div class="panel-body">
+  {% if track_plays %}
+    <table class="table table-striped">
+    <thead>
+    <tr>
+      <th>Station</th>
+      <th>Time</th>
+    </tr>
+    </thead>
+    <tbody>
+      {% for play in track_plays %}
+          <tr>
+            <td>
+              <a href="/musiclog/station/{{ play.station.id }}/">
+                {{ play.station.name }}
+              </a>
+          </td>
+        <td>{{ play.timestamp }}</td>
+      </tr>
+      {% endfor %}
+      </table>
+  {% endif %}
+  </div>
+</div>
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h2>Plays by Station</h2>
+  </div>
+  <div class="panel-body">
+  <div class="row">
+  <div class="col-md-4">
+{% if station_plays %}
+      <table class="table">
+    {% for airplay in station_plays %}
+    <tr>
+          <td>
+            <a href="/musiclog/station/{{ airplay.0.station__id }}/">{{ airplay.0.station__name }} </a>
+          </td>
+          <!-- <td bgcolor="{{ airplay.1 }}"> -->
+          <td>
+            <span class="badge">
+              {{ airplay.0.station__id__count }}
+            </span>
+          </td>
+      <td bgcolor="{{ airplay.1 }}"></td>
+        </tr>
+    {% endfor %}
+    </table>
+{% endif %}
+  </div>
+  <div class="col-md-2">
+  </div>
+  <div class="col-md-6">
+  <p>
+  <canvas id="stationChart" height="300" width="300"></canvas>
+  </p>
+  </div>
+  </div>
+  </div> <!-- end panel body -->
+</div> <!-- end panel -->
+</div> <!-- end container -->
+
+{% endblock %}
