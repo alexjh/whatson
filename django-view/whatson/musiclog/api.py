@@ -1,6 +1,8 @@
 # musiclog/api.py
 import json
-from tastypie.resources import ModelResource
+from tastypie import fields
+from tastypie.authorization import DjangoAuthorization
+from tastypie.resources import ModelResource, ALL, ALL_WITH_RELATIONS
 from musiclog.models import Track, Artist, Release, Airplay, Station
 
 
@@ -18,11 +20,26 @@ class StationResource(ModelResource):
     class Meta:
         queryset = Station.objects.all()
         resource_name = 'Station'
+        filtering = {
+                       'id': ALL_WITH_RELATIONS,
+                    }
 
 class AirplayResource(ModelResource):
+    station = fields.ForeignKey(StationResource,
+                                'station',
+                                blank=True,
+                                null=True)
+
     class Meta:
         queryset = Airplay.objects.all()
         resource_name = 'Airplay'
+
+        ordering = [
+                     'timestamp',
+                   ]
+        filtering = {
+                       'station': ALL_WITH_RELATIONS,
+                    }
 
 class TrackResource(ModelResource):
     class Meta:
