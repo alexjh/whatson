@@ -36,6 +36,7 @@ class AirplayResource(ModelResource):
 
         ordering = [
                      'timestamp',
+                     'id',
                    ]
         filtering = {
                        'station': ALL_WITH_RELATIONS,
