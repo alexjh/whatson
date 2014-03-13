@@ -1,8 +1,8 @@
 #!/usr/bin/python
-"""Imports data from SimpleDB and generates a YAML file that can be
+"""Imports data from SimpleDB and generates a JSON file that can be
 consumed by Django"""
 
-import yaml
+import json
 import urllib
 import datetime
 import tempfile
@@ -11,8 +11,9 @@ import os
 import collections
 import boto
 import pytz
+import dateutil.parser
 
-BASE_URL = 'http://192.168.0.10:8000/api/v1/Airplay/?format=yaml'
+BASE_URL = 'http://192.168.0.10:8000/api/v1/Airplay/?format=json'
 
 STATION_URL = BASE_URL + '&order_by=-timestamp&station__id=%d&limit=1'
 
@@ -21,21 +22,21 @@ PK_URL = BASE_URL + '&order_by=-id&limit=1'
 def import_from_original_db():
     """Imports the original data to acquire the primary keys"""
     if False:
-        temp_file = tempfile.mkstemp(suffix='.yaml', prefix='whatson-')
+        temp_file = tempfile.mkstemp(suffix='.json', prefix='whatson-')
 
         models = ['track', 'release', 'artist', 'station']
 
         for model in models:
             cmdline = "python manage.py dumpdata " \
-                      "--format=yaml musiclog.%s >> %s" % (model, temp_file[1])
+                      "--format=json musiclog.%s >> %s" % (model, temp_file[1])
             subprocess.call(cmdline, shell=True)
 
         os.fsync(temp_file[0])
         import_data = os.fdopen(temp_file[0])
     else:
-        import_data = open('track-data.yaml')
+        import_data = open('track-data.json')
 
-    import_yaml = yaml.safe_load(import_data)
+    import_json = json.load(import_data)
 
     # It looks like Django dumpdata orders things by their pk, but
     # is this guaranteed? Perform an extra dict -> OrderedDict just
@@ -43,7 +44,7 @@ def import_from_original_db():
 
     # Generate the station dict
     station_list_comp = [(entry['fields']['callsign'], (entry['pk'], entry['fields']['timezone'])) \
-                         for entry in import_yaml \
+                         for entry in import_json \
                          if entry['model'] == 'musiclog.station']
     tmp_station_dict = {key: value for (key, value) in station_list_comp}
     station_dict = collections.OrderedDict(
@@ -51,7 +52,7 @@ def import_from_original_db():
 
     # Generate the artist dict
     artist_list_comp = [(entry['fields']['name'], entry['pk']) \
-                         for entry in import_yaml \
+                         for entry in import_json \
                          if entry['model'] == 'musiclog.artist']
     tmp_artist_dict = {key: value for (key, value) in artist_list_comp}
     artist_dict = collections.OrderedDict(
@@ -59,7 +60,7 @@ def import_from_original_db():
 
     # Generate the release dict
     release_list_comp = [(entry['fields']['title'], entry['pk']) \
-                         for entry in import_yaml \
+                         for entry in import_json \
                          if entry['model'] == 'musiclog.release']
     tmp_release_dict = {key: value for (key, value) in release_list_comp}
     release_dict = collections.OrderedDict(
@@ -68,7 +69,7 @@ def import_from_original_db():
     # Generate the track dict
     track_list_comp = [((entry['fields']['title'], entry['fields']['artist']),
                           entry['pk']) \
-                        for entry in import_yaml \
+                        for entry in import_json \
                         if entry['model'] == 'musiclog.track']
     tmp_track_dict = {key: value for (key, value) in track_list_comp}
     track_dict = collections.OrderedDict(
@@ -84,9 +85,9 @@ def get_latest_airplay_pk():
     Returns the latest airplay PK from all of the stations as
     an integer"""
     latest_airplay_pk_file = urllib.urlopen(PK_URL)
-    latest_airplay_pk_yaml = yaml.load(latest_airplay_pk_file)
-    if len(latest_airplay_pk_yaml['objects']):
-        return latest_airplay_pk_yaml['objects'][0]['id']
+    latest_airplay_pk_json = json.load(latest_airplay_pk_file)
+    if len(latest_airplay_pk_json['objects']):
+        return latest_airplay_pk_json['objects'][0]['id']
     else:
         return 0
 
@@ -98,15 +99,15 @@ def get_latest_station_airplay(station_pk, station_tz):
 
     station_tz_type = pytz.timezone(station_tz)
     remote_file = urllib.urlopen(STATION_URL % station_pk)
-    latest_yaml = yaml.load(remote_file)
+    latest_json = json.load(remote_file)
 
-    if len(latest_yaml['objects']):
-        ts = datetime.datetime.strptime(
-                latest_yaml['objects'][0]['timestamp'],
-                "%Y-%m-%dT%H:%M:%S")
-        print "# naive:", ts
+    print latest_json
+
+    if len(latest_json['objects']):
+        ts = dateutil.parser.parse(latest_json['objects'][0]['timestamp'])
+        print ts
         ts = pytz.UTC.localize(ts)
-        print "# ", ts, ts.astimezone(station_tz_type)
+        print ts
         return ts.astimezone(station_tz_type)
     else:
         then = datetime.datetime(1970, 1, 1)
@@ -127,8 +128,7 @@ def get_recent_airplays( epoch, callsign ):
         return []
 
     query = 'select * from `%s` where itemName() > "%08x" order by itemName() asc' % (domain.name, epoch)
-    print "#", query
-    result_set = domain.select(query, max_items = 5000)
+    result_set = domain.select(query, max_items = 10)
     for item in result_set:
         airplay_list.append(
                 (datetime.datetime.utcfromtimestamp(int(item.name, 16)),
@@ -137,14 +137,12 @@ def get_recent_airplays( epoch, callsign ):
     return airplay_list
 
 def main():
-    """Generate YAML data to be consumed by Django"""
+    """Generate JSON data to be consumed by Django"""
 
     (station_dict,
      artist_dict,
      release_dict,
      track_dict) = import_from_original_db()
-
-    print "# ", station_dict
 
     new_artists = []
     new_releases = []
@@ -164,14 +162,17 @@ def main():
         epoch_reference = epoch_reference.astimezone(station_tz_type)
 
         timestamp = get_latest_station_airplay(station_pk, station_tz)
+        print timestamp
 
         epoch = int((timestamp - epoch_reference).total_seconds())
+        print epoch
         # get the list of songs from SimpleDB that are newer than
         # the timestamp
         airplay_list = get_recent_airplays( epoch, callsign )
 
         for (play_time, airplay) in airplay_list:
-            print "# ", play_time
+            print play_time
+
             artist_pk = None
             release_pk = None
             track_pk = None
@@ -250,8 +251,6 @@ def main():
                     track_dict[ (airplay['Title'], artist_pk) ] = track_pk
                 else:
                     track_pk = track_dict[(airplay['Title'], artist_pk)]
-            else:
-                print "# Error adding track:", airplay
 
             # If the track_pk is None, something has gone wrong, so skip it
             if track_pk != None:
@@ -263,24 +262,22 @@ def main():
                           'fields': {
                             'track': track_pk,
                             'station': station_pk,
-                            'timestamp': play_time,
+                            'timestamp': play_time.isoformat(),
                           },
                           'model': 'musiclog.airplay',
                           'pk': latest_airplay_pk,
                         }
 
                     )
-            else:
-                print "# Failed to add airplay:", callsign, airplay
 
     if len(new_artists):
-        print yaml.safe_dump(new_artists)
+        print json.dumps(new_artists, indent=4, separators=(',', ': '))
     if len(new_releases):
-        print yaml.safe_dump(new_releases)
+        print json.dumps(new_releases, indent=4, separators=(',', ': '))
     if len(new_tracks):
-        print yaml.safe_dump(new_tracks)
+        print json.dumps(new_tracks, indent=4, separators=(',', ': '))
     if len(new_airplay):
-        print yaml.safe_dump(new_airplay)
+        print json.dumps(new_airplay, indent=4, separators=(',', ': '))
 
 
 if __name__ == "__main__":
