@@ -21,15 +21,13 @@ PK_URL = BASE_URL + '&order_by=-id&limit=1'
 
 def import_from_original_db():
     """Imports the original data to acquire the primary keys"""
-    if False:
+    if True:
         temp_file = tempfile.mkstemp(suffix='.json', prefix='whatson-')
 
-        models = ['track', 'release', 'artist', 'station']
-
-        for model in models:
-            cmdline = "python manage.py dumpdata " \
-                      "--format=json musiclog.%s >> %s" % (model, temp_file[1])
-            subprocess.call(cmdline, shell=True)
+        cmdline = "python manage.py dumpdata --format=json " \
+                  "musiclog.track musiclog.release musiclog.artist " \
+                  "musiclog.station > %s " % temp_file[1]
+        subprocess.call(cmdline, shell=True)
 
         os.fsync(temp_file[0])
         import_data = os.fdopen(temp_file[0])
@@ -43,37 +41,37 @@ def import_from_original_db():
     # to be safe.
 
     # Generate the station dict
-    station_list_comp = [(entry['fields']['callsign'], (entry['pk'], entry['fields']['timezone'])) \
+    station_list_comp = [(entry['fields']['callsign'], entry['pk']) \
                          for entry in import_json \
                          if entry['model'] == 'musiclog.station']
-    tmp_station_dict = {key: value for (key, value) in station_list_comp}
+    tmp_dict = {key: value for (key, value) in station_list_comp}
     station_dict = collections.OrderedDict(
-        sorted(tmp_station_dict.items(), key=lambda t: t[1]))
+        sorted(tmp_dict.items(), key=lambda t: t[1]))
 
     # Generate the artist dict
     artist_list_comp = [(entry['fields']['name'], entry['pk']) \
                          for entry in import_json \
                          if entry['model'] == 'musiclog.artist']
-    tmp_artist_dict = {key: value for (key, value) in artist_list_comp}
+    tmp_dict = {key: value for (key, value) in artist_list_comp}
     artist_dict = collections.OrderedDict(
-        sorted(tmp_artist_dict.items(), key=lambda t: t[1]))
+        sorted(tmp_dict.items(), key=lambda t: t[1]))
 
     # Generate the release dict
     release_list_comp = [(entry['fields']['title'], entry['pk']) \
                          for entry in import_json \
                          if entry['model'] == 'musiclog.release']
-    tmp_release_dict = {key: value for (key, value) in release_list_comp}
+    tmp_dict = {key: value for (key, value) in release_list_comp}
     release_dict = collections.OrderedDict(
-        sorted(tmp_release_dict.items(), key=lambda t: t[1]))
+        sorted(tmp_dict.items(), key=lambda t: t[1]))
 
     # Generate the track dict
     track_list_comp = [((entry['fields']['title'], entry['fields']['artist']),
                           entry['pk']) \
                         for entry in import_json \
                         if entry['model'] == 'musiclog.track']
-    tmp_track_dict = {key: value for (key, value) in track_list_comp}
+    tmp_dict = {key: value for (key, value) in track_list_comp}
     track_dict = collections.OrderedDict(
-        sorted(tmp_track_dict.items(), key=lambda t: t[1]))
+        sorted(tmp_dict.items(), key=lambda t: t[1]))
 
     return (station_dict, artist_dict, release_dict, track_dict)
 
@@ -91,28 +89,29 @@ def get_latest_airplay_pk():
     else:
         return 0
 
-def get_latest_station_airplay(station_pk, station_tz):
+def get_latest_station_airplay(station_pk):
     """Gets the latest airplay from a specific station
 
     Returns a timestamp for the airplay.
     """
 
-    station_tz_type = pytz.timezone(station_tz)
     remote_file = urllib.urlopen(STATION_URL % station_pk)
     latest_json = json.load(remote_file)
 
-    print latest_json
+    # print latest_json
 
     if len(latest_json['objects']):
-        ts = dateutil.parser.parse(latest_json['objects'][0]['timestamp'])
-        print ts
-        ts = pytz.UTC.localize(ts)
-        print ts
-        return ts.astimezone(station_tz_type)
+        latest = dateutil.parser.parse(latest_json['objects'][0]['timestamp'])
     else:
-        then = datetime.datetime(1970, 1, 1)
-        then = pytz.UTC.localize(then)
-        return then.astimezone(station_tz_type)
+        latest = datetime.datetime(1970, 1, 1)
+
+    # print latest
+
+    latest = pytz.UTC.localize(latest)
+
+    # print latest
+
+    return latest
 
 def get_recent_airplays( epoch, callsign ):
     """Queries SimpleDB for any airplays newer than epoch
@@ -127,9 +126,11 @@ def get_recent_airplays( epoch, callsign ):
     except boto.exception.SDBResponseError:
         return []
 
-    query = 'select * from `%s` where itemName() > "%08x" order by itemName() asc' % (domain.name, epoch)
-    result_set = domain.select(query, max_items = 10)
+    query = 'select * from `%s` where itemName() > "%08x" ' \
+            'order by itemName() asc' % (domain.name, epoch)
+    result_set = domain.select(query, max_items = 5000)
     for item in result_set:
+        # print int(item.name, 16), datetime.datetime.utcfromtimestamp(int(item.name, 16))
         airplay_list.append(
                 (datetime.datetime.utcfromtimestamp(int(item.name, 16)),
                  item))
@@ -151,27 +152,21 @@ def main():
 
     latest_airplay_pk = get_latest_airplay_pk()
 
-    for callsign, (station_pk, station_tz) in station_dict.items():
-        if callsign != 'CKGE':
-            continue
-
-        station_tz_type = pytz.timezone(station_tz)
-
+    for callsign, station_pk in station_dict.items():
         epoch_reference = datetime.datetime(1970, 1, 1)
         epoch_reference = pytz.UTC.localize(epoch_reference)
-        epoch_reference = epoch_reference.astimezone(station_tz_type)
 
-        timestamp = get_latest_station_airplay(station_pk, station_tz)
-        print timestamp
+        timestamp = get_latest_station_airplay(station_pk)
+        # print timestamp
 
-        epoch = int((timestamp - epoch_reference).total_seconds())
-        print epoch
+        # print int((timestamp - epoch_reference).total_seconds())
         # get the list of songs from SimpleDB that are newer than
         # the timestamp
-        airplay_list = get_recent_airplays( epoch, callsign )
+        airplay_list = get_recent_airplays( 
+                int((timestamp - epoch_reference).total_seconds()), callsign )
 
         for (play_time, airplay) in airplay_list:
-            print play_time
+            # print play_time
 
             artist_pk = None
             release_pk = None
@@ -256,7 +251,6 @@ def main():
             if track_pk != None:
                 latest_airplay_pk += 1
                 play_time = pytz.UTC.localize(play_time)
-                play_time = play_time.astimezone(station_tz_type)
                 new_airplay.append(
                         {
                           'fields': {
@@ -270,14 +264,10 @@ def main():
 
                     )
 
-    if len(new_artists):
-        print json.dumps(new_artists, indent=4, separators=(',', ': '))
-    if len(new_releases):
-        print json.dumps(new_releases, indent=4, separators=(',', ': '))
-    if len(new_tracks):
-        print json.dumps(new_tracks, indent=4, separators=(',', ': '))
-    if len(new_airplay):
-        print json.dumps(new_airplay, indent=4, separators=(',', ': '))
+    print json.dumps(new_artists
+                   + new_releases
+                   + new_tracks
+                   + new_airplay, indent=4, separators=(',', ': '))
 
 
 if __name__ == "__main__":
