@@ -2,6 +2,8 @@
 """Imports data from SimpleDB and generates a JSON file that can be
 consumed by Django"""
 
+# TODO Run the loaddata command directly from here.
+
 import json
 import urllib
 import datetime
