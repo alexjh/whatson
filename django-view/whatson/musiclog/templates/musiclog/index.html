@@ -3,7 +3,7 @@
 {% if latest_airplays %}
     <ul>
     {% for airplay in latest_airplays %}
-        <li><a href="musiclog/airplay/{{ airplay.id }}/">{{ airplay.track.title }}</a></li>
+        <li><a href="{{ airplay.get_absolute_url }}">{{ airplay.track.title }}</a></li>
     {% endfor %}
     </ul>
 {% else %}

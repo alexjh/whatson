@@ -1,6 +1,7 @@
 """What's On Django Models"""
 
 from django.db import models
+import django.core.urlresolvers
 
 class Artist(models.Model):
     """Represents an artist"""
@@ -9,12 +10,18 @@ class Artist(models.Model):
     def __unicode__(self):
         return self.name
 
+    def get_absolute_url(self):
+        return django.core.urlresolvers.reverse('artist', args=[str(self.id)])
+
 class Release(models.Model):
     """Represents an album"""
     title = models.CharField(max_length=200)
 
     def __unicode__(self):
         return self.title
+
+    def get_absolute_url(self):
+        return django.core.urlresolvers.reverse('release', args=[str(self.id)])
 
 class Track(models.Model):
     """Represents a track associated with an album"""
@@ -33,6 +40,9 @@ class Track(models.Model):
         else:
             return self.title
 
+    def get_absolute_url(self):
+        return django.core.urlresolvers.reverse('track', args=[str(self.id)])
+
 class Station(models.Model):
     """Represents a station that plays tracks"""
     name = models.CharField(max_length=100)
@@ -41,6 +51,9 @@ class Station(models.Model):
 
     def __unicode__(self):
         return "%s (%s)" % (self.name, self.callsign)
+
+    def get_absolute_url(self):
+        return django.core.urlresolvers.reverse('station', args=[str(self.id)])
 
 class Airplay(models.Model):
     """Represents a played song"""
@@ -53,4 +66,7 @@ class Airplay(models.Model):
 
     def __unicode__(self):
         return "%s @ %s" % (self.track.title, str(self.timestamp))
+
+    def get_absolute_url(self):
+        return django.core.urlresolvers.reverse('airplay', args=[str(self.id)])
 

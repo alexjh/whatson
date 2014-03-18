@@ -55,18 +55,18 @@
     {% if track_info.album %}
     from {{ track_info.album }}<br />
     {% endif %}
-by <a href="/musiclog/artist/{{ track_info.artist.id }}/">{{ track_info.artist }}</a>
+by <a href="{{ track_info.artist.get_absolute_url }}">{{ track_info.artist }}</a>
 </small>
 </h1>
 </div>
 <div class="alert alert-info">
   <p> Most recently played at {{newest_play.timestamp}} by 
-  <a class="alert-link" href="/musiclog/station/{{newest_play.station.id}}">
+  <a class="alert-link" href="{{newest_play.station.get_absolute_url}}">
     {{newest_play.station.name}}
   </a>
   </p>
   <p> First played at {{first_play.timestamp}} by 
-  <a class="alert-link" href="/musiclog/station/{{first_play.station.id}}">{{first_play.station.name}}
+  <a class="alert-link" href="{{first_play.station.get_absolute_url}}">{{first_play.station.name}}
   </a>
   </p>
 </div>
@@ -88,7 +88,7 @@ by <a href="/musiclog/artist/{{ track_info.artist.id }}/">{{ track_info.artist }
       {% for play in track_plays %}
           <tr>
             <td>
-              <a href="/musiclog/station/{{ play.station.id }}/">
+              <a href="{{ play.station.get_absolute_url }}">
                 {{ play.station.name }}
               </a>
           </td>
@@ -104,35 +104,32 @@ by <a href="/musiclog/artist/{{ track_info.artist.id }}/">{{ track_info.artist }
     <h2>Plays by Station</h2>
   </div>
   <div class="panel-body">
-  <div class="row">
-  <div class="col-md-4">
-{% if station_plays %}
-      <table class="table">
-    {% for airplay in station_plays %}
-    <tr>
-          <td>
-            <a href="/musiclog/station/{{ airplay.0.station__id }}/">{{ airplay.0.station__name }} </a>
-          </td>
-          <!-- <td bgcolor="{{ airplay.1 }}"> -->
-          <td>
-            <span class="badge">
+    <div class="row">
+      <div class="col-md-4">
+        <table class="table">
+        {% for airplay in station_plays %}
+          <tr>
+            <td>
+              <a href="/musiclog/station/{{ airplay.0.station__id }}/">{{ airplay.0.station__name }}</a>
+            </td>
+            <td>
+              <span class="badge">
               {{ airplay.0.station__id__count }}
-            </span>
-          </td>
-      <td bgcolor="{{ airplay.1 }}"></td>
-        </tr>
-    {% endfor %}
-    </table>
-{% endif %}
-  </div>
-  <div class="col-md-2">
-  </div>
-  <div class="col-md-6">
-  <p>
-  <canvas id="stationChart" height="300" width="300"></canvas>
-  </p>
-  </div>
-  </div>
+              </span>
+            </td>
+            <td bgcolor="{{ airplay.1 }}"></td>
+          </tr>
+        {% endfor %}
+        </table>
+      </div>
+      <div class="col-md-2">
+      </div>
+      <div class="col-md-6">
+        <p>
+        <canvas id="stationChart" height="300" width="300"></canvas>
+        </p>
+      </div>
+    </div>
   </div> <!-- end panel body -->
 </div> <!-- end panel -->
 </div> <!-- end container -->

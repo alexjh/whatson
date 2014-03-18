@@ -75,10 +75,10 @@
   {% for airplay in latest_airplays %}
     <tr>
       <td>
-        <a href="/musiclog/track/{{ airplay.track.id }}/">{{ airplay.track.title }}
+        <a href="{{ airplay.track.get_absolute_url }}">{{ airplay.track.title }}
         </a>
       </td>
-      <td><a href="/musiclog/station/{{ airplay.station.id }}/">{{ airplay.station.name}}</a></td>
+      <td><a href="{{ airplay.station.get_absolute_url }}/">{{ airplay.station.name}}</a></td>
       <td>{{ airplay.timestamp }}</td>
     </tr>
   {% endfor %}

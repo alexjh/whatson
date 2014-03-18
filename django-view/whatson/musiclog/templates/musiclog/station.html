@@ -72,12 +72,12 @@
         {% for song in recent_songs %}
           <tr>
             <td>
-              <a href="/musiclog/track/{{ song.track.id }}/">
+              <a href="{{ song.track.get_absolute_url }}">
                 {{ song.track.title }}
               </a>
             </td>
             <td>
-              <a href="/musiclog/artist/{{ song.track.artist.id }}/">
+              <a href="{{ song.track.artist.get_absolute_url }}">
               {{ song.track.artist.name }}
               </a>
             </td>
