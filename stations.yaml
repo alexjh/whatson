@@ -22,7 +22,7 @@ CIOC:
   tz: America/Vancouver
 CKBT:
   id: 6837
-  tz: America/Toronto
+  tz: America/Vancouver
 CKGE:
   id: 4822
   tz: America/Toronto
@@ -49,7 +49,7 @@ CIZL:
   tz: America/Winnipeg
 CKCK:
   id: 6692
-  tz: America/Winnipeg
+  tz: America/Regina
 CFQC:
   id: 5490
   tz: America/Winnipeg
