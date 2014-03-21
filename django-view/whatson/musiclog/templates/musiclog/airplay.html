@@ -1,0 +1,9 @@
+{% load bootstrap_toolkit %}
+
+<ul>
+{% for airplay in latest_airplays %}
+    <li><a href="/airplay/{{ airplay.id }}/">{{ airplay.track.title }}</a></li>
+{% empty %}
+    <li>No recent tracks.</li>
+{% endfor %}
+</ul>

@@ -1,0 +1,127 @@
+{% extends 'dh5bp/base.html' %}
+{% load bootstrap_toolkit %}
+{% load url from future %}
+{% load staticfiles %}
+
+{% block pre_main_script %}
+        <script src="{% static "js/musiclog/js/Chart.js" %}"></script>
+    <script>
+
+    {{artists_doughnut|escape|safe}}
+    var stationDoughnut = new Chart(document.getElementById("stationChart").getContext("2d")).Doughnut(artists_doughnut);
+
+    </script>
+{% endblock %}
+
+{% block head %}
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="{% static "css/musiclog/css/hint.css" %}">
+<link href="{% static "css/musiclog/css/bootstrap.css" %}" rel="stylesheet">
+<link href="{% static "css/musiclog/css/starter-template.css" %}" rel="stylesheet">
+{% endblock %}
+
+{% block title %}What's On :: Station :: {{ station_info.name }}{% endblock %}
+
+{% block content %}
+
+<div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#">What's On</a>
+        </div>
+        <div class="collapse navbar-collapse">
+            <ul class="nav navbar-nav">
+                <li class="active"><a href="#">Home</a></li>
+                <li><a href="/musiclog/station">Stations</a></li>
+                <li><a href="/musiclog/artist">Artists</a></li>
+                <li><a href="/musiclog/track">Tracks</a></li>
+            </ul>
+        </div><!--/.nav-collapse -->
+    </div>
+</div>
+
+<div class="container">
+
+  <div class="page-header">
+<h1>
+{{ station_info.name }} :: {{ station_info.callsign }}
+</h1>
+    </div>
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h2>Recently Played Songs</h2>
+  </div>
+  <div class="panel-body">
+  {% if recent_songs %}
+    <table class="table table-striped">
+      <thead>
+          <tr>
+            <th>Name</th>
+            <th>Artist</th>
+            <th>Time</th>
+          </tr>
+      </thead>
+      <tbody>
+        {% for song in recent_songs %}
+          <tr>
+            <td>
+              <a href="{{ song.track.get_absolute_url }}">
+                {{ song.track.title }}
+              </a>
+            </td>
+            <td>
+              <a href="{{ song.track.artist.get_absolute_url }}">
+              {{ song.track.artist.name }}
+              </a>
+            </td>
+            <td>{{ song.timestamp}}
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+  {% endif %}
+  </div>
+</div>
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h2>Artist Popularity</h2>
+  </div>
+  <div class="panel-body">
+  <div class="row">
+  <div class="col-md-4">
+  {% if popular_artists %}
+    <table class="table">
+      {% for play in popular_artists %}
+      <tr><td>{{artist}}
+              <a href="/musiclog/artist/{{ play.0.track__artist__id }}/">
+                {{ play.0.track__artist__name }}
+              </a>
+          </td>
+          <td><span class="badge">{{ play.0.track__artist__id__count }}</span></td>
+      <td bgcolor="{{ play.1 }}"></td>
+        <tr>
+      {% endfor %}
+      </table>
+  {% endif %}
+  </div>
+  <div class="col-md-2">
+  </div>
+  <div class="col-md-6">
+  <p>
+  <canvas id="stationChart" height="300" width="300"></canvas>
+  </p>
+  </div>
+  </div>
+  </div> <!-- end panel body -->
+</div> <!-- end panel -->
+</div> <!-- end container -->
+
+{% endblock %}
