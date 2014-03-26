@@ -1,0 +1,73 @@
+{% extends 'dh5bp/base.html' %}
+{% load bootstrap_toolkit %}
+{% load url from future %}
+{% load staticfiles %}
+{% block head %}
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="{% static "css/musiclog/css/hint.css" %}">
+<link href="{% static "css/musiclog/css/bootstrap.css" %}" rel="stylesheet">
+<link href="{% static "css/musiclog/css/starter-template.css" %}" rel="stylesheet">
+{% endblock %}
+
+{% block title %}What's On{% endblock %}
+
+{% block content %}
+<!-- TODO Make this common across all templates. -->
+<div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#">What's On</a>
+        </div>
+        <div class="collapse navbar-collapse">
+            <ul class="nav navbar-nav">
+                <li class="active"><a href="#">Home</a></li>
+                <li><a href="/musiclog/station">Stations</a></li>
+                <li><a href="/musiclog/artist">Artists</a></li>
+                <li><a href="/musiclog/track">Tracks</a></li>
+            </ul>
+        </div><!--/.nav-collapse -->
+    </div>
+</div>
+<div class="container">
+
+  <div class="page-header">
+    <h1>What's On - Radio Play Song Tracking</h1>
+  </div>
+
+  <div class="panel panel-default">
+    <div class="panel-body">
+    The What's On project tracks radio plays across North America and
+    displays stats about stations, artists, and tracks.
+
+      <div class="row">
+        <div class="col-md-4">
+          <h3>Browse by:</h3>
+
+          <ul class="list-group">
+              <li class="list-group-item">
+                  <a href="/musiclog/station">Stations</a>
+              </li>
+              <li class="list-group-item">
+                  <a href="/musiclog/artist">Artists</a>
+              </li>
+              <li class="list-group-item">
+                  <a href="/musiclog/track">Tracks</a>
+              </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="panel-footer">
+      <a href="http://github.com/alexjh/whatson">Project sources</a>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
