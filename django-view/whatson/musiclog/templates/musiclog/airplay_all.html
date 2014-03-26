@@ -3,11 +3,7 @@
 {% load url from future %}
 {% load staticfiles %}
 {% block head %}
-
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="stylesheet" href="{% static "css/musiclog/css/hint.css" %}">
-<link href="{% static "css/musiclog/css/bootstrap.css" %}" rel="stylesheet">
-<link href="{% static "css/musiclog/css/starter-template.css" %}" rel="stylesheet">
+{% include "musiclog/head.html" %}
 {% endblock %}
 
 {% block title %}What's On{% endblock %}
