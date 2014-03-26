@@ -5,7 +5,8 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
 # Tastypie
 from tastypie.api import Api
-from musiclog.api import TrackResource, ArtistResource, StationResource, ReleaseResource, AirplayResource
+from musiclog.api import TrackResource, ArtistResource, StationResource
+from musiclog.api import ReleaseResource, AirplayResource
 
 # HTML5 Boilerplate
 from dh5bp.urls import urlpatterns as dh5bp_urls
@@ -20,16 +21,15 @@ admin.autodiscover()
 # Tastypie
 v1_api = Api(api_name='v1')
 
-v1_api.register( TrackResource() )
-v1_api.register( AirplayResource() )
-v1_api.register( ReleaseResource() )
-v1_api.register( StationResource() )
-v1_api.register( ArtistResource() )
+v1_api.register(TrackResource())
+v1_api.register(AirplayResource())
+v1_api.register(ReleaseResource())
+v1_api.register(StationResource())
+v1_api.register(ArtistResource())
 
 urlpatterns = patterns('',
     # Examples:
-    # url(r'^$', 'whatson.views.home', name='home'),
-    # url(r'^whatson/', include('whatson.foo.urls')),
+    url(r'^$', 'musiclog.views.index', name='index'),
 
     # Uncomment the admin/doc line below to enable admin documentation:
     url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
