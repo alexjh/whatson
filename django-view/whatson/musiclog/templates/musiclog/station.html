@@ -49,10 +49,10 @@
 <div class="container">
 
   <div class="page-header">
-<h1>
-{{ station_info.name }} :: {{ station_info.callsign }}
-</h1>
-    </div>
+    <h1>
+      {{ station_info.name }} :: {{ station_info.callsign }}
+    </h1>
+  </div>
 
 <div class="panel panel-default">
   <div class="panel-heading">
@@ -100,8 +100,8 @@
   {% if popular_artists %}
     <table class="table">
       {% for play in popular_artists %}
-      <tr><td>{{artist}}
-              <a href="/musiclog/artist/{{ play.0.track__artist__id }}/">
+      <tr><td>
+              <a href="{{ play.2 }}">
                 {{ play.0.track__artist__name }}
               </a>
           </td>

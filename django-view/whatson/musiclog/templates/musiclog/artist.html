@@ -78,7 +78,7 @@
         <a href="{{ airplay.track.get_absolute_url }}">{{ airplay.track.title }}
         </a>
       </td>
-      <td><a href="{{ airplay.station.get_absolute_url }}/">{{ airplay.station.name}}</a></td>
+      <td><a href="{{ airplay.station.get_absolute_url }}">{{ airplay.station.name}}</a></td>
       <td>{{ airplay.timestamp }}</td>
     </tr>
   {% endfor %}
@@ -104,7 +104,7 @@
     {% for airplay in airplay_popular %}
         <tr>
           <td>
-            <a href="/musiclog/track/{{ airplay.0.track__id }}/">{{ airplay.0.track__title }} </a>
+            <a href="{{ airplay.2 }}">{{ airplay.0.track__title }}</a>
           </td>
           <td>
             <span class="badge">{{ airplay.0.track__id__count }}</span>
@@ -135,14 +135,14 @@
   {% if station_plays %}
     <table class="table">
       {% for station in station_plays %}
-          <tr><td>
-              <a href="/musiclog/station/{{ station.0.station__id }}/">{{ station.0.station__name }}
-              </a>
-          </td>
-          <td>
-            <span class="badge">{{ station.0.station__id__count }}</span>
-          </td>
-      <td bgcolor="{{ station.1 }}"></td>
+          <tr>
+            <td>
+              <a href="{{ station.2 }}">{{ station.0.station__name }}</a>
+            </td>
+            <td>
+              <span class="badge">{{ station.0.station__id__count }}</span>
+            </td>
+            <td bgcolor="{{ station.1 }}"></td>
           <tr>
       {% endfor %}
       </table>

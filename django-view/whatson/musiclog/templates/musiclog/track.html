@@ -110,7 +110,7 @@ by <a href="{{ track_info.artist.get_absolute_url }}">{{ track_info.artist }}</a
         {% for airplay in station_plays %}
           <tr>
             <td>
-              <a href="/musiclog/station/{{ airplay.0.station__id }}/">{{ airplay.0.station__name }}</a>
+              <a href="{{ airplay.2 }}">{{ airplay.0.station__name }}</a>
             </td>
             <td>
               <span class="badge">
