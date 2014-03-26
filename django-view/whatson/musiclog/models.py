@@ -11,6 +11,7 @@ class Artist(models.Model):
         return self.name
 
     def get_absolute_url(self):
+        """Returns the absolute URL to be used by the template"""
         return django.core.urlresolvers.reverse('artist', args=[str(self.id)])
 
 class Release(models.Model):
@@ -21,15 +22,16 @@ class Release(models.Model):
         return self.title
 
     def get_absolute_url(self):
+        """Returns the absolute URL to be used by the template"""
         return django.core.urlresolvers.reverse('release', args=[str(self.id)])
 
 class Track(models.Model):
     """Represents a track associated with an album"""
-    title  = models.CharField(max_length=100)
-    album  = models.ForeignKey( Release, null = True, blank = True )
-    artist = models.ForeignKey( Artist )
-    lfid   = models.PositiveIntegerField( null = True, blank = True )
-    mbid   = models.CharField( max_length=36, null = True, blank = True )
+    title = models.CharField(max_length=100)
+    album = models.ForeignKey(Release, null=True, blank=True)
+    artist = models.ForeignKey(Artist)
+    lfid = models.PositiveIntegerField(null=True, blank=True)
+    mbid = models.CharField(max_length=36, null=True, blank=True)
 
     class Meta:
         unique_together = ('title', 'album', 'artist')
@@ -41,6 +43,7 @@ class Track(models.Model):
             return self.title
 
     def get_absolute_url(self):
+        """Returns the absolute URL to be used by the template"""
         return django.core.urlresolvers.reverse('track', args=[str(self.id)])
 
 class Station(models.Model):
@@ -53,13 +56,14 @@ class Station(models.Model):
         return "%s (%s)" % (self.name, self.callsign)
 
     def get_absolute_url(self):
+        """Returns the absolute URL to be used by the template"""
         return django.core.urlresolvers.reverse('station', args=[str(self.id)])
 
 class Airplay(models.Model):
     """Represents a played song"""
     timestamp = models.DateTimeField()
-    track = models.ForeignKey( Track )
-    station = models.ForeignKey( Station )
+    track = models.ForeignKey(Track)
+    station = models.ForeignKey(Station)
 
     class Meta:
         unique_together = ('station', 'timestamp')
@@ -68,5 +72,6 @@ class Airplay(models.Model):
         return "%s @ %s" % (self.track.title, str(self.timestamp))
 
     def get_absolute_url(self):
+        """Returns the absolute URL to be used by the template"""
         return django.core.urlresolvers.reverse('airplay', args=[str(self.id)])
 
